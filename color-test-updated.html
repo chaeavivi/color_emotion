@@ -288,20 +288,8 @@
       const colorKey  = el.dataset.key;
       const colorName = el.dataset.colorName || colorKey;
       
-      // 안정적인 플레이스홀더 이미지 사용
-      const colorImages = {
-        'red': 'https://via.placeholder.com/400x400/fd0100/ffffff?text=Red+Emotion',
-        'orange': 'https://via.placeholder.com/400x400/ff9900/ffffff?text=Orange+Emotion',
-        'yellow': 'https://via.placeholder.com/400x400/ffde59/000000?text=Yellow+Emotion',
-        'green': 'https://via.placeholder.com/400x400/00b050/ffffff?text=Green+Emotion',
-        'cyan': 'https://via.placeholder.com/400x400/38b6ff/ffffff?text=Cyan+Emotion',
-        'navy': 'https://via.placeholder.com/400x400/0b0b92/ffffff?text=Navy+Emotion',
-        'purple': 'https://via.placeholder.com/400x400/631da2/ffffff?text=Purple+Emotion',
-        'magenta': 'https://via.placeholder.com/400x400/ff009d/ffffff?text=Magenta+Emotion',
-        'pink': 'https://via.placeholder.com/400x400/ff8fb3/000000?text=Pink+Emotion'
-      };
-      
-      const imgSrc = colorImages[colorKey] || FALLBACK_IMAGE;
+      // 가장 간단한 테스트
+      const imgSrc = 'https://via.placeholder.com/400/667eea/ffffff?text=Test';
       const bg = getComputedStyle(el).backgroundColor;
 
       // 1) Loading view with the SAME color background
