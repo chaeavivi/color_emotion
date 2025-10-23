@@ -302,20 +302,8 @@
       const colorKey  = el.dataset.key;
       const colorName = el.dataset.colorName || colorKey;
       
-      // 컬러별 이미지 매핑
-      const colorImages = {
-        'red': 'https://via.placeholder.com/900/ff0000/ffffff?text=Red',
-        'orange': 'https://via.placeholder.com/900/ff9900/ffffff?text=Orange',
-        'yellow': 'https://via.placeholder.com/900/ffde59/000000?text=Yellow',
-        'green': 'https://via.placeholder.com/900/00b050/ffffff?text=Green',
-        'cyan': 'https://via.placeholder.com/900/38b6ff/ffffff?text=Cyan',
-        'navy': 'https://via.placeholder.com/900/0b0b92/ffffff?text=Navy',
-        'purple': 'https://via.placeholder.com/900/631da2/ffffff?text=Purple',
-        'magenta': 'https://via.placeholder.com/900/ff009d/ffffff?text=Magenta',
-        'pink': 'https://via.placeholder.com/900/ff8fb3/000000?text=Pink'
-      };
-      
-      const imgSrc = colorImages[colorKey] || FALLBACK_IMAGE;
+      // GitHub에 업로드된 실제 이미지 사용
+      const imgSrc = `${GITHUB_IMAGE_BASE}${colorKey}.jpg`;
       const bg = getComputedStyle(el).backgroundColor;
 
       // 1) Loading view with the SAME color background
