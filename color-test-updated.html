@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>컬러 로딩 → 결과 DEMO</title>
+  <style>
+    :root {
+      --gap: 14px;
+      --radius: 16px;
+      --bg: #0b0b0f;
+      --text: #f8f8fa;
+      --muted: #9aa0a6;
+      --shadow: 0 10px 30px rgba(0,0,0,.2);
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0; font-family: "Pretendard", system-ui, -apple-system, Segoe UI, Roboto, Noto Sans KR, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      color: var(--text);
+      display: grid; place-items: center;
+    }
+    
+    /* 결과 페이지일 때 배경 변경 */
+    body.result-page {
+      background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+    }
+    .container { width: min(960px, 92vw); margin: 6vh auto; text-align: center; }
+    h1 { font-size: clamp(20px, 3.2vw, 32px); margin: 0 0 20px; text-align: center; }
+    p  { color: rgba(255, 255, 255, 0.9); margin: 0 0 24px; text-align: center; }
+
+    /* View states */
+    .view { display: none; }
+    .view.active { display: block; }
+    
+    /* 결과 페이지 제목 스타일 */
+    #view-result h1 {
+      color: #333;
+      margin-bottom: 30px;
+    }
+
+    /* Color Picker Container */
+    .color-picker-container {
+      background: rgba(255, 255, 255, 0.25);
+      border-radius: 24px;
+      padding: 40px 32px;
+      box-shadow: 
+        0 8px 32px rgba(31, 38, 135, 0.37),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      margin-top: 32px;
+      position: relative;
+    }
+    
+    .color-picker-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+      border-radius: 24px;
+      pointer-events: none;
+    }
+
+    /* Picker */
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--gap); max-width: 360px; margin: 0 auto; }
+    .chip {
+      position: relative; 
+      border-radius: 50%; 
+      width: 100px; 
+      height: 100px; 
+      cursor: pointer; 
+      overflow: hidden;
+      border: 2px solid rgba(255,255,255,.3); 
+      box-shadow: 
+        0 8px 32px rgba(31, 38, 135, 0.37),
+        inset 0 1px 0 rgba(255,255,255,.2);
+      transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
+      margin: 0 auto;
+      backdrop-filter: blur(10px);
+    }
+    .chip:focus-visible { outline: 3px solid rgba(255,255,255,0.8); outline-offset: 4px; }
+    .chip:hover { 
+      transform: translateY(-4px) scale(1.05); 
+      box-shadow: 
+        0 15px 40px rgba(31, 38, 135, 0.5),
+        inset 0 1px 0 rgba(255,255,255,.4);
+      border: 2px solid rgba(255,255,255,.5);
+    }
+    .chip:active {
+      transform: translateY(-2px) scale(1.02);
+    }
+    .chip span {
+      position: absolute; 
+      top: 50%; 
+      left: 50%; 
+      transform: translate(-50%, -50%);
+      font-weight: 700; 
+      color: rgba(255,255,255,.95);
+      text-shadow: 0 2px 8px rgba(0,0,0,.6);
+      font-size: 12px;
+      letter-spacing: 0.5px;
+      text-align: center;
+      line-height: 1.2;
+    }
+
+    /* Loading */
+    .loading {
+      height: 65vh; border-radius: calc(var(--radius) + 4px); display: grid; place-items: center; position: relative;
+      overflow: hidden;
+    }
+    .spinner { width: 64px; height: 64px; border-radius: 50%; border: 6px solid rgba(255,255,255,.25); border-top-color: #fff; animation: spin 1s linear infinite; }
+    .loading-label { position: absolute; bottom: 24px; left: 24px; right: 24px; display: flex; justify-content: space-between; color: rgba(255,255,255,.92); font-weight: 600; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Result */
+    .result { display: grid; gap: 14px; }
+    .result .card { 
+      background: rgba(255, 255, 255, 0.25); 
+      border: 1px solid rgba(255, 255, 255, 0.18); 
+      border-radius: 24px; 
+      box-shadow: 
+        0 8px 32px rgba(31, 38, 135, 0.37),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      overflow: hidden; 
+      position: relative;
+    }
+    .result .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+      border-radius: 24px;
+      pointer-events: none;
+    }
+    .result img { 
+      display: block; 
+      width: 100%; 
+      height: 400px; 
+      object-fit: cover; 
+      border-radius: 20px 20px 0 0;
+    }
+    .toolbar { 
+      display: flex; 
+      gap: 10px; 
+      align-items: center; 
+      justify-content: space-between; 
+      padding: 20px 24px; 
+      color: rgba(255, 255, 255, 0.9);
+      position: relative;
+      z-index: 1;
+    }
+    .pill { 
+      padding: 8px 16px; 
+      border-radius: 999px; 
+      background: rgba(255,255,255,.25); 
+      color: #000000; 
+      font-weight: 600; 
+      font-size: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(10px);
+    }
+    .btn { 
+      appearance: none; 
+      border: none; 
+      padding: 10px 16px; 
+      border-radius: 12px; 
+      font-weight: 700; 
+      cursor: pointer;
+      background: rgba(255,255,255,.25);
+      color: #000000;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(10px);
+      transition: all 0.3s ease;
+    }
+    .btn:hover {
+      background: rgba(255,255,255,.35);
+      transform: translateY(-2px);
+    }
+    .btn.secondary { 
+      background: rgba(255,255,255,.25); 
+      color: #000000;
+    }
+
+    /* Responsive tweaks */
+    @media (max-width: 520px) {
+      .color-picker-container { padding: 24px 20px; margin-top: 20px; }
+      .grid { max-width: 280px; }
+      .chip { width: 80px; height: 80px; }
+      .chip span { font-size: 10px; }
+      .loading { height: 56vh; }
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <!-- View 1: Color Picker -->
+    <section id="view-picker" class="view active" aria-labelledby="picker-title">
+      <h1 id="picker-title">오늘 끌리는 컬러는?</h1>
+      <p>직감적으로 끌리는 색을 선택해주세요.<br>오늘의 당신의 마음을 들여다 봅니다.</p>
+      
+      <div class="color-picker-container">
+        <div class="grid" role="list">
+          <!-- 3x3 배열: 9가지 컬러 -->
+          <button class="chip" role="listitem" style="background:linear-gradient(135deg, #fd0100, #ff4444)" data-color-name="Red" data-key="red" data-image="images/red.jpg" aria-label="Red – 레드"><span>Red<br>(레드)</span></button>
+          <button class="chip" role="listitem" style="background:linear-gradient(135deg, #ff9900, #ffbb33)" data-color-name="Orange" data-key="orange" data-image="images/orange.jpg" aria-label="Orange – 오렌지"><span>Orange<br>(오렌지)</span></button>
+          <button class="chip" role="listitem" style="background:linear-gradient(135deg, #ffde59, #fff082)" data-color-name="Yellow" data-key="yellow" data-image="images/yellow.jpg" aria-label="Yellow – 옐로우"><span>Yellow<br>(옐로우)</span></button>
+          
+          <button class="chip" role="listitem" style="background:linear-gradient(135deg, #00b050, #33cc66)" data-color-name="Green" data-key="green" data-image="images/green.jpg" aria-label="Green – 그린"><span>Green<br>(그린)</span></button>
+          <button class="chip" role="listitem" style="background:linear-gradient(135deg, #38b6ff, #66ccff)" data-color-name="Cyan" data-key="cyan" data-image="images/cyan.jpg" aria-label="Cyan – 시안"><span>Cyan<br>(시안)</span></button>
+          <button class="chip" role="listitem" style="background:linear-gradient(135deg, #0b0b92, #3333bb)" data-color-name="Navy" data-key="navy" data-image="images/navy.jpg" aria-label="Navy – 네이비"><span>Navy<br>(네이비)</span></button>
+          
+          <button class="chip" role="listitem" style="background:linear-gradient(135deg, #631da2, #8844cc)" data-color-name="Purple" data-key="purple" data-image="images/purple.jpg" aria-label="Purple – 퍼플"><span>Purple<br>(퍼플)</span></button>
+          <button class="chip" role="listitem" style="background:linear-gradient(135deg, #ff009d, #ff44bb)" data-color-name="Magenta" data-key="magenta" data-image="images/magenta.jpg" aria-label="Magenta – 마젠타"><span>Magenta<br>(마젠타)</span></button>
+          <button class="chip" role="listitem" style="background:linear-gradient(135deg, #ff8fb3, #ffb3d6)" data-color-name="Pink" data-key="pink" data-image="images/pink.jpg" aria-label="Pink – 핑크"><span>Pink<br>(핑크)</span></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- View 2: Fullscreen Loading with selected color -->
+    <section id="view-loading" class="view" aria-live="polite" aria-busy="true">
+      <div id="loadingBox" class="loading" style="background:#111;">
+        <div class="spinner" aria-hidden="true"></div>
+        <div class="loading-label"><span id="loadingColor">Color</span><span>선택하기…</span></div>
+      </div>
+    </section>
+
+    <!-- View 3: Result Image -->
+    <section id="view-result" class="view" aria-labelledby="result-title">
+      <h1 id="result-title">오늘의 결과</h1>
+      <div class="result">
+        <div class="card">
+          <img id="resultImage" src="" alt="선택한 컬러 결과 이미지" />
+          <div class="toolbar">
+            <span class="pill" id="resultBadge">—</span>
+            <div style="display:flex; gap:8px;">
+              <button class="btn secondary" id="btnBack">다시 선택</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // ===== Simple state machine (picker → loading → result) =====
+    const views = {
+      picker: document.getElementById('view-picker'),
+      loading: document.getElementById('view-loading'),
+      result: document.getElementById('view-result'),
+    };
+    const loadingBox   = document.getElementById('loadingBox');
+    const loadingColor = document.getElementById('loadingColor');
+    const resultImage  = document.getElementById('resultImage');
+    const resultBadge  = document.getElementById('resultBadge');
+    const btnBack      = document.getElementById('btnBack');
+
+    const FALLBACK_IMAGE = 'https://via.placeholder.com/400x400/667eea/ffffff?text=Loading'; // 기본 이미지
+    const GITHUB_IMAGE_BASE = 'https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/images/'; // GitHub 저장소 경로
+    const LOADING_MS = 1400; // 로딩 유지 시간 (ms)
+
+    function show(name){
+      Object.values(views).forEach(v => v.classList.remove('active'));
+      views[name].classList.add('active');
+      
+      // 결과 페이지일 때 body 배경 변경
+      if(name === 'result') {
+        document.body.classList.add('result-page');
+      } else {
+        document.body.classList.remove('result-page');
+      }
+    }
+
+    function onSelectColor(el){
+      const colorKey  = el.dataset.key;
+      const colorName = el.dataset.colorName || colorKey;
+      // GitHub에서 이미지 로드 (예: red.jpg, orange.jpg 등)
+      const imgSrc    = `${GITHUB_IMAGE_BASE}${colorKey}.jpg`;
+      const bg        = getComputedStyle(el).backgroundColor;
+
+      // 1) Loading view with the SAME color background
+      loadingBox.style.background = bg;
+      loadingColor.textContent = `${colorName}`;
+      show('loading');
+
+      // 2) After delay, show the result image
+      setTimeout(() => {
+        resultImage.src = imgSrc;
+        resultImage.onerror = () => { 
+          console.log(`Failed to load: ${imgSrc}, using fallback`);
+          resultImage.src = FALLBACK_IMAGE; 
+        };
+        resultBadge.textContent = colorName;
+        show('result');
+      }, LOADING_MS);
+    }
+
+    // Wire chips
+    document.querySelectorAll('.chip').forEach(chip => {
+      chip.addEventListener('click', () => onSelectColor(chip));
+      chip.addEventListener('keydown', (e) => {
+        if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); onSelectColor(chip); }
+      });
+      chip.setAttribute('tabindex', '0');
+    });
+
+    // Back to picker
+    btnBack?.addEventListener('click', () => {
+      show('picker');
+    });
+
+    // 페이지 로드 완료
+    window.addEventListener('load', () => {
+      console.log('Color test page loaded');
+    });
+  </script>
+</body>
+</html>
